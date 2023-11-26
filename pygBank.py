@@ -11,9 +11,6 @@ from datetime import datetime
 #TODO Algum método de armazenar/acessar o histórico da pessoa (acessar o arquivo em que as movimentações foram salvas, ex: Excel, csv, etc...)
 #TODO Alguma interface de texto?
 
-
-## TCHOLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
-
 class Conta:
     def __init__(self, nome, banco, saldo, data_inicial=datetime.today()):
         self.nome = nome
