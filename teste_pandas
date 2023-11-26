@@ -1,0 +1,13 @@
+import pandas as pd
+import numpy as np
+
+db = pd.read_excel(r"C:\Users\rafae\OneDrive\Faculdade\10º Período\Projeto Computacional\bancodedados.xlsx",sheet_name="Conta_Corrente")
+
+print(db)
+
+db_BB = db.loc[db["Banco"]=="BB"]
+
+print(db_BB)
+
+db_BB_soma = db_BB.sum()
+print(db_BB_soma)

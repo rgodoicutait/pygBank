@@ -8,6 +8,8 @@ from datetime import datetime
 ### usar o pandas para salvar tudo em algum lugar?
 #### Como formatar uma string como data?
 ##### Como chamar a subclasse para utilizar tanto as funções da classe mãe quanto a da filha?
+#TODO Algum método de armazenar/acessar o histórico da pessoa (acessar o arquivo em que as movimentações foram salvas, ex: Excel, csv, etc...)
+#TODO Alguma interface de texto?
 
 
 class Conta:
@@ -42,6 +44,10 @@ class Credito(Conta):
         print(f'Limite: R${self.limite:.2f}')
         print(f'Data de Fechamento da Fatura: {self.data_fech}')
         print(f'Data de Vencimento da Fatura: {self.data_venc}')
+    
+    #TODO Função que faz o parcelamento de compras e já adiciona as parcelas para os próximos meses.
+    #TODO Cálculo de juros em caso de não pagamento da fatura na data devida************ (cada banco faz de um jeito, fica complicado)
+
 
 
 class ContaCorrente(Conta):
