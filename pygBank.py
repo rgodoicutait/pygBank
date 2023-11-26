@@ -12,6 +12,8 @@ from datetime import datetime
 #TODO Alguma interface de texto?
 
 
+## TCHOLAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+
 class Conta:
     def __init__(self, nome, banco, saldo, data_inicial=datetime.today()):
         self.nome = nome
