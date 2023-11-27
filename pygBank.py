@@ -155,10 +155,9 @@ class ContaPoupanca(Conta):
 
 ##########
 
-nu_deb = ContaCorrente("Tainá","NuBank",11000,0)
-nu_deb.debito("Guitarra (Fender)",5000)
-nu_deb.recebimento("Pix do além",1000)
-nu_deb.debito("Um agrado pro meu xuxu",4000)
+nu_deb = ContaCorrente("Tainá","NuBank",1100,0)
+nu_deb.debito("Uber Demar",15)
+nu_deb.recebimento("Pix",100)
 nu_deb.Extrato()
 
 nu_cred = Credito("Rafael","NuBank",100,3000,"18/12/2023","26/12/2023")
