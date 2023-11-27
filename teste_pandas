@@ -1,13 +1,59 @@
-import pandas as pd
-import numpy as np
+from openpyxl import Workbook, load_workbook
+from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.formula import ArrayFormula
 
-db = pd.read_excel(r"C:\Users\rafae\OneDrive\Faculdade\10º Período\Projeto Computacional\bancodedados.xlsx",sheet_name="Conta_Corrente")
+data = {
+    'Movimentação 1':{
+        'Nome': 'Gabriel',
+        'Banco': 'Nu',
+        'Data_mov': '12/11/21',
+        'Descrição': 'Saldo Inicial',
+        'Valor': 500,
+        'Saldo': 500
+    },
+    'Movimentacao 2':{ 
+        'Nome': 'Gabriel',
+        'Banco': 'Nu',
+        'Data_mov': '12/11/21',
+        'Descrição': 'Remedio',
+        'Valor': 200,
+        'Saldo': '' ## CONVERTER A STR EM NUMERO 
+    }
+}
 
-print(db)
+wb = Workbook()
+ws = wb.active
+ws.title = 'Saldo'
 
-db_BB = db.loc[db["Banco"]=="BB"]
+headings = ['Movimentação'] + list(data['Movimentação 1'].keys())
+ws.append(headings)
 
-print(db_BB)
+for movimentacao in data: 
+    dados = list(data[movimentacao].values())
+    ws.append([movimentacao] + dados)
 
-db_BB_soma = db_BB.sum()
-print(db_BB_soma)
+
+
+def atualizar_saldo(ws):
+    # Obter o saldo inicial
+    saldo_inicial = ws['G2'].value
+
+    # Obter o valor do remédio
+    valor_coluna = float(input(ws['F4'].value))
+    valor = [ws['F3'].value,valor_coluna]
+
+    # Calcular o saldo atual
+    saldo_atual = saldo_inicial - sum(valor)
+
+    # Atualizar o saldo
+    #ws['G3'] = 
+    ws['G4'] = saldo_atual
+
+
+
+# Atualizar o saldo
+atualizar_saldo(ws)
+
+
+
+wb.save('SALDOXD.xlsx')
