@@ -81,9 +81,13 @@ class Credito(Conta):
             self.fatura_atual['Valor Total Fatura'] = self.calcular_cumsum_intervalo()
 
     def calcular_cumsum_intervalo(self):
-        # Retorna o cumsum considerando apenas o intervalo do extrato
-        mask = (self.fatura_atual['Data']> self.data_fech) & (self.fatura_atual['Data']<=self.data_fech + timedelta(days=30))
-        return self.fatura_atual.loc[mask,'Valor'].cumsum()
+        return self.fatura_atual['Valor'].cumsum()
+
+    def proxima_data_fechamento(self):
+        if self.data_fech.month == 12:
+            return self.data_fech.replace(year=self.data_fech.year +1, month=1) 
+        else:
+            return self.data_fech.replace(month=self.data_fech.month + 1)
             
     
     def fechar_fatura(self):
