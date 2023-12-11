@@ -68,7 +68,7 @@ class Credito(Conta):
             self.valor_total_fatura+=valor_parcela
             if i==0: data_fatura = data_compra
             elif i>0: data_fatura = data_parcela
-            self.fatura_atual = self.fatura_atual.append({'Data':data_fatura,
+            self.fatura_atual = self.fatura_atual._append({'Data':data_fatura,
                                                           'Descrição':f'{descr} {i+1}/{parcela}',
                                                           'Valor': valor_parcela, 
                                                           'Valor Total Fatura': 0},
