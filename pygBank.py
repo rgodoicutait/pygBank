@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from openpyxl import load_workbook, Workbook
 from datetime import datetime
 from datetime import timedelta
 
@@ -12,7 +13,7 @@ from datetime import timedelta
 #TODO Algum método de armazenar/acessar o histórico da pessoa (acessar o arquivo em que as movimentações foram salvas, ex: Excel, csv, etc...)
 #TODO Alguma interface de texto?
 
-db_path = r"C:\Users\rafae\OneDrive\Faculdade\10º Período\Projeto Computacional\bancodedados.xlsx"
+db_path = r'C:\Users\sivei\OneDrive\Documentos\Projeto-Computacional\bancodedados.xlsx'
 
 class Conta:
     def __init__(self, nome, banco, saldo, data_inicial=datetime.today()):
@@ -29,8 +30,6 @@ class Conta:
         print(f'Nome: {self.nome}')
         print(f'Banco: {self.banco}')
         print(f'Saldo: R${self.saldo:.2f}')
-
-
 
 class Credito(Conta):
     def __init__(self, nome, banco, saldo, limite, data_fech, data_venc):
@@ -107,6 +106,30 @@ class Credito(Conta):
         # Atualiza a data de vencimento para o próximo mês
         self.data_venc += timedelta(days=30)
 
+    ### PRECISA MUDAR VARIAVEIS PARA SE ADEQUAR O CODIGO 
+    def exibir_fatura(self): 
+        data = input('Data: ')
+        descricao = input('Descrição: ')
+        valor = float(input('Valor: '))
+
+        # Carregar o arquivo Excel existente ou criar um novo
+        try:
+            wb = load_workbook(self.caminho)
+        except FileNotFoundError:
+            wb = Workbook()
+
+        # Selecionar a planilha 'Faturas' ou criar uma nova
+        if 'Faturas' in wb.sheetnames:
+            ws = wb['Faturas']
+        else:
+            ws = wb.create_sheet('Faturas')
+
+        # Adicionar novos dados à planilha
+        nova_linha = [data, descricao, valor]
+        ws.append(nova_linha)
+
+        # Salvar o arquivo Excel
+        wb.save(self.caminho)
     
     #TODO Função que faz o parcelamento de compras e já adiciona as parcelas para os próximos meses.
     #TODO Cálculo de juros em caso de não pagamento da fatura na data devida************ (cada banco faz de um jeito, fica complicado)
