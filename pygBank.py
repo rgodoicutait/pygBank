@@ -2,6 +2,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 from openpyxl import load_workbook, Workbook
+from openpyxl.utils.dataframe import dataframe_to_rows
+from openpyxl.worksheet.table import Table, TableStyleInfo
+from openpyxl.utils import get_column_letter
 from datetime import datetime
 from datetime import timedelta
 
@@ -106,30 +109,51 @@ class Credito(Conta):
         # Atualiza a data de vencimento para o próximo mês
         self.data_venc += timedelta(days=30)
 
-    ### PRECISA MUDAR VARIAVEIS PARA SE ADEQUAR O CODIGO 
-    def exibir_fatura(self): 
-        data = input('Data: ')
-        descricao = input('Descrição: ')
-        valor = float(input('Valor: '))
+    '''
+        - Está "funcioinando", aparece que o arquivo esta corrompido mas aparece a primeira fatura 
 
+        - o cabeçalho nao é o da coluna  
+    '''
+    def exibir_fatura(self): 
         # Carregar o arquivo Excel existente ou criar um novo
         try:
-            wb = load_workbook(self.caminho)
+            wb = load_workbook(self.arquivo_excel)
         except FileNotFoundError:
             wb = Workbook()
 
-        # Selecionar a planilha 'Faturas' ou criar uma nova
-        if 'Faturas' in wb.sheetnames:
-            ws = wb['Faturas']
-        else:
+        # Verificar se a planilha 'Faturas' já existe
+        if 'Faturas' not in wb.sheetnames:
             ws = wb.create_sheet('Faturas')
+        else:
+            ws = wb['Faturas']
 
-        # Adicionar novos dados à planilha
-        nova_linha = [data, descricao, valor]
-        ws.append(nova_linha)
+        # Criar um DataFrame com os dados da fatura atual
+        df = self.fatura_atual
+
+        # Verificar se a tabela já existe na planilha
+        table_exists = False
+        for table in ws.tables.values():
+            if table.name == 'FaturaTable':
+                table_exists = True
+                break
+
+        # Se a tabela ainda não existe, adicionar os dados como uma nova tabela
+        if not table_exists:
+            ws.append([])
+            for r in dataframe_to_rows(df, index=False, header=True):
+                ws.append(r)
+
+            # Criar a tabela com o DataFrame
+            tab = Table(displayName="FaturaTable", ref=f"A1:{get_column_letter(df.shape[1])}{df.shape[0] + 1}")
+            style = TableStyleInfo(name="TableStyleMedium9", showFirstColumn=False,
+                                   showLastColumn=False, showRowStripes=True, showColumnStripes=True)
+            tab.tableStyleInfo = style
+            ws.add_table(tab)
 
         # Salvar o arquivo Excel
-        wb.save(self.caminho)
+        wb.save(self.arquivo_excel)
+
+
     
     #TODO Função que faz o parcelamento de compras e já adiciona as parcelas para os próximos meses.
     #TODO Cálculo de juros em caso de não pagamento da fatura na data devida************ (cada banco faz de um jeito, fica complicado)
@@ -186,6 +210,8 @@ nu_deb.Extrato()
 nu_cred = Credito("Rafael","NuBank",100,3000,"18/12/2023","26/12/2023")
 nu_cred.gasto("27/12/2023","Uber",12.50)
 nu_cred.gasto("28/12/2023","SSD",250,3)
-nu_cred.gasto("30/12/2023","Passagem Lorena - SP",90,4)
+#nu_cred.gasto("30/12/2023","Passagem Lorena - SP",90,4)
+#nu_cred.gasto("31/12/2023","Chá",50)
 
+nu_cred.exibir_fatura()
 nu_cred.fechar_fatura()
