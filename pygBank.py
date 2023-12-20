@@ -16,13 +16,14 @@ from datetime import timedelta
 #TODO Algum método de armazenar/acessar o histórico da pessoa (acessar o arquivo em que as movimentações foram salvas, ex: Excel, csv, etc...)
 #TODO Alguma interface de texto?
 
-db_path = r'C:\Users\sivei\OneDrive\Documentos\Projeto-Computacional\bancodedados.xlsx'
+
 
 class Conta:
-    def __init__(self, nome, banco, saldo, data_inicial=datetime.today()):
+    def __init__(self, nome, banco, saldo, db_path, data_inicial=datetime.today()):
         self.nome = nome
         self.banco = banco
         self.saldo = saldo
+        self.db_path = db_path
         if data_inicial is str:
             self.data_inicial = datetime.strptime(data_inicial,"%d/%m/$Y")
         else:
@@ -35,16 +36,15 @@ class Conta:
         print(f'Saldo: R${self.saldo:.2f}')
 
 class Credito(Conta):
-    def __init__(self, nome, banco, saldo, limite, data_fech, data_venc):
+    def __init__(self, nome, banco, saldo, limite, data_fech, data_venc,db_path):
         '''Utilize as datas de fechamento e de vencimento da fatura no seguinte formato:
            dd/mm/aaaa'''
-        super().__init__(nome, banco, saldo)
+        super().__init__(nome, banco, saldo,db_path)
         self.limite = limite
         self.data_fech = datetime.strptime(data_fech,"%d/%m/%Y")
         self.data_venc = datetime.strptime(data_venc,"%d/%m/%Y")
-        self.fatura_atual = pd.DataFrame(columns=['Data','Descrição','Valor','Valor Total Fatura'])
+        self.fatura_atual = pd.DataFrame(columns=['Data','Descrição','Valor'])
         self.arquivo_excel = db_path
-        self.valor_total_fatura = 0
 
 
     def resumo(self):
@@ -66,103 +66,47 @@ class Credito(Conta):
         for i in range(parcela):
             data_compra = datetime.strptime(data,"%d/%m/%Y")
             data_parcela = self.data_fech + timedelta(days=30 * (i+1)) # Encontra as datas das próximas parcelas da compra
-
-            self.valor_total_fatura+=valor_parcela
             if i==0: data_fatura = data_compra
             elif i>0: data_fatura = data_parcela
             self.fatura_atual = self.fatura_atual._append({'Data':data_fatura,
                                                           'Descrição':f'{descr} {i+1}/{parcela}',
-                                                          'Valor': valor_parcela, 
+                                                          'Valor': valor_parcela,
                                                           'Valor Total Fatura': 0},
                                                           ignore_index = True)
             
-            # Ordena o DataFrame pela coluna data
-            self.fatura_atual = self.fatura_atual.sort_values('Data').reset_index(drop=True)
+        # Recalcula o valor total da fatura
+        self.fatura_atual['Data'] = pd.to_datetime(self.fatura_atual['Data'], format='%d/%m/%Y')
+        data_ref=[]
+        for x in self.fatura_atual['Data']:
+            if x.day<18 and x.month==1:
+                data_ref.append(x+pd.offsets.MonthBegin(0)+pd.DateOffset(days=self.data_fech.day - 1))
+            elif x.day<18:
+                data_ref.append(x+pd.offsets.MonthBegin(-1)+pd.DateOffset(days=self.data_fech.day - 1))
+            elif x.day>=18:
+                data_ref.append(x+pd.offsets.MonthBegin(0)+pd.DateOffset(days=self.data_fech.day - 1))
+        self.fatura_atual['Data_Ref']=data_ref
+    
+        self.fatura_atual = self.fatura_atual.sort_values(by="Data")
+        self.fatura_atual['Valor'] = pd.to_numeric(self.fatura_atual['Valor'], errors='coerce')
+        self.fatura_atual['Valor Total Fatura']=self.fatura_atual.groupby([self.fatura_atual['Data_Ref'].dt.year, self.fatura_atual['Data_Ref'].dt.month])['Valor'].cumsum()
 
-            # Recalcula o valor total da fatura
-            self.fatura_atual['Valor Total Fatura'] = self.calcular_cumsum_intervalo()
-
-    def calcular_cumsum_intervalo(self):
-        return self.fatura_atual['Valor'].cumsum()
-
-    def proxima_data_fechamento(self):
-        if self.data_fech.month == 12:
-            return self.data_fech.replace(year=self.data_fech.year +1, month=1) 
-        else:
-            return self.data_fech.replace(month=self.data_fech.month + 1)
             
     
     def fechar_fatura(self):
         # Exibe a fatura atual
-        print("\nFatura Atual:")
-        
-        print(self.fatura_atual)
 
         # Salva a fatura em um arquivo Excel
-        # with pd.ExcelWriter(db_path, engine='openpyxl', mode='a') as writer:
-        #     self.fatura_atual.to_excel(writer, sheet_name="Faturas", index=False)
-
-
-        # Limpa a fatura atual
-        self.fatura_atual = pd.DataFrame(columns=['Data','Descrição','Valor','Valor Total Fatura'])
+        self.fatura_atual.to_csv(self.db_path,';',index=False)
         
-        # Atualiza a data de vencimento para o próximo mês
-        self.data_venc += timedelta(days=30)
-
-    '''
-        - Está "funcioinando", aparece que o arquivo esta corrompido mas aparece a primeira fatura 
-
-        - o cabeçalho nao é o da coluna  
-    '''
     def exibir_fatura(self): 
-        # Carregar o arquivo Excel existente ou criar um novo
-        try:
-            wb = load_workbook(self.arquivo_excel)
-        except FileNotFoundError:
-            wb = Workbook()
+        caminho = self.db_path
+        db_fatura = pd.read_csv(caminho,header = 0)
 
-        # Verificar se a planilha 'Faturas' já existe
-        if 'Faturas' not in wb.sheetnames:
-            ws = wb.create_sheet('Faturas')
-        else:
-            ws = wb['Faturas']
-
-        # Criar um DataFrame com os dados da fatura atual
-        df = self.fatura_atual
-
-        # Verificar se a tabela já existe na planilha
-        table_exists = False
-        for table in ws.tables.values():
-            if table.name == 'FaturaTable':
-                table_exists = True
-                break
-
-        # Se a tabela ainda não existe, adicionar os dados como uma nova tabela
-        if not table_exists:
-            ws.append([])
-            for r in dataframe_to_rows(df, index=False, header=True):
-                ws.append(r)
-
-            # Criar a tabela com o DataFrame
-            tab = Table(displayName="FaturaTable", ref=f"A1:{get_column_letter(df.shape[1])}{df.shape[0] + 1}")
-            style = TableStyleInfo(name="TableStyleMedium9", showFirstColumn=False,
-                                   showLastColumn=False, showRowStripes=True, showColumnStripes=True)
-            tab.tableStyleInfo = style
-            ws.add_table(tab)
-
-        # Salvar o arquivo Excel
-        wb.save(self.arquivo_excel)
-
-
-    
-    #TODO Função que faz o parcelamento de compras e já adiciona as parcelas para os próximos meses.
     #TODO Cálculo de juros em caso de não pagamento da fatura na data devida************ (cada banco faz de um jeito, fica complicado)
 
-
-
 class ContaCorrente(Conta):
-    def __init__(self, nome, banco, saldo, taxa=0):
-        super().__init__(nome, banco, saldo)
+    def __init__(self, nome, banco, saldo, db_path, taxa=0):
+        super().__init__(nome, banco, saldo, db_path)
         self.taxa = taxa
 
     def debito(self, descr, valor, data=datetime.today()):
@@ -201,17 +145,18 @@ class ContaPoupanca(Conta):
         print(f'Rendimento: {self.rendimento}%')
 
 ##########
+# path = r"C:\Users\rafae\OneDrive\Faculdade\10º Período\Projeto Computacional\bancodedados.xlsx"
+path = r"C:\Users\rafae\OneDrive\Faculdade\10º Período\Projeto Computacional\bancodedados.csv"
+# nu_deb = ContaCorrente("Tainá","NuBank",1100,0)
+# nu_deb.debito("Uber Demar",15)
+# nu_deb.recebimento("Pix",100)
+# nu_deb.Extrato()
 
-nu_deb = ContaCorrente("Tainá","NuBank",1100,0)
-nu_deb.debito("Uber Demar",15)
-nu_deb.recebimento("Pix",100)
-nu_deb.Extrato()
-
-nu_cred = Credito("Rafael","NuBank",100,3000,"18/12/2023","26/12/2023")
+nu_cred = Credito("Rafael","NuBank",100,3000,"18/12/2023","26/12/2023",db_path=path)
 nu_cred.gasto("27/12/2023","Uber",12.50)
 nu_cred.gasto("28/12/2023","SSD",250,3)
-#nu_cred.gasto("30/12/2023","Passagem Lorena - SP",90,4)
-#nu_cred.gasto("31/12/2023","Chá",50)
-
-nu_cred.exibir_fatura()
+nu_cred.gasto("30/12/2023","Passagem Lorena - SP",90,4)
+nu_cred.gasto("31/12/2023","Chá",50)
+nu_cred.gasto("20/02/2023","Guitar Hero 3",300)
+print(nu_cred.fatura_atual)
 nu_cred.fechar_fatura()

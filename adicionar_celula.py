@@ -1,17 +1,20 @@
-from openpyxl import load_workbook
+from openpyxl import load_workbook,Workbook
+from datetime import datetime
+import pandas as pd
 
 class Fatura:
     def __init__(self, caminho_arquivo):
         self.caminho = caminho_arquivo
 
     def exibir_fatura(self): 
-        data = input('Data: ')
+        data = datetime.strptime(input('Data: '),"%d/%m/$Y")
         descricao = input('Descrição: ')
         valor = float(input('Valor: '))
 
         # Carregar o arquivo Excel existente ou criar um novo
         try:
-            wb = load_workbook(self.caminho)
+            # wb = load_workbook(self.caminho)
+            df = pd.read_excel(self.caminho,'Faturas',header=0)
         except FileNotFoundError:
             wb = Workbook()
 
@@ -29,7 +32,8 @@ class Fatura:
         wb.save(self.caminho)
 
 # Caminho para o arquivo Excel
-caminho = r'C:\Users\sivei\OneDrive\Documentos\Projeto-Computacional\bancodedados.xlsx'
+# caminho = r'C:\Users\sivei\OneDrive\Documentos\Projeto-Computacional\bancodedados.xlsx'
+caminho = r'C:\Users\rafae\OneDrive\Faculdade\10º Período\Projeto Computacional\bancodedados.xlsx'
 
 # Criar uma instância da classe Fatura passando o caminho do arquivo
 fatura = Fatura(caminho)
