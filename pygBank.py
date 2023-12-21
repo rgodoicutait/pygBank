@@ -8,36 +8,11 @@ from openpyxl.utils import get_column_letter
 from datetime import datetime, timedelta, date
 import os
 
-"""
-Banking System - Documentation
-
-This program implements a simple banking system with credit, checking, and savings accounts.
-
-Modules and Libraries Used:
-- numpy
-- matplotlib.pyplot
-- pandas
-- openpyxl
-- datetime
-- os
-
-Example Usage:
-- Create instances of the Credit, Checking, and Savings account classes.
-- Perform operations such as expenses, receipts, export, and query of invoices/extractions.
-"""
-
+#TODO Exportar fatura do crédito para um csv. OK
+#TODO Exportar o extrato da conta corrente para um csv?
+#TODO Login
 
 class Conta:
-    """
-    - Attributes:
-        - name (str): User's name.
-        - bank (str): Bank name.
-        - folder_path (str): Program folder path.
-
-    - Methods:
-        - __init__(self, name, bank): Initializes an instance of the Account class.
-        - summary(self): Displays an account summary.
-    """
     def __init__(self, nome, banco):
         self.nome = nome
         self.banco = banco
@@ -52,21 +27,6 @@ class Conta:
         print(f'Saldo: R${self.saldo:.2f}')
 
 class Credito(Conta):
-    """
-    - Attributes:
-        - limit (float): Credit limit.
-        - closing_date (datetime): Invoice closing date.
-        - due_date (datetime): Invoice due date.
-        - current_invoice (DataFrame): DataFrame to store invoice transactions.
-        - cred_file (str): Path of the CSV file to export/import the invoice.
-
-    - Methods:
-        - __init__(self, name, bank, limit, closing_date, due_date): Initializes an instance of the Credit class.
-        - summary(self): Displays a summary of the credit account.
-        - expense(self, date, descr, value, installment=1): Records an expense in the credit account.
-        - export_invoice(self, path=None): Exports the invoice to a CSV file.
-        - query_invoice(self, path=None): Queries the invoice from a CSV file.
-    """
     def __init__(self, nome, banco, limite, data_fech, data_venc):
         '''Utilize as datas de fechamento e de vencimento da fatura no seguinte formato:
            dd/mm/aaaa'''
@@ -130,19 +90,6 @@ class Credito(Conta):
         self.fatura_atual['Data'] = pd.to_datetime(self.fatura_atual['Data'], format='%d/%m/%Y')
         
 class ContaCorrente(Conta):
-    """
-    - Attributes:
-        - statement (DataFrame): DataFrame to store checking account transactions.
-        - checking_file (str): Path of the CSV file to export/import the statement.
-
-    - Methods:
-        - __init__(self, name, bank): Initializes an instance of the Checking class.
-        - receipt(self, date, desc, value): Records a receipt in the checking account.
-        - expense(self, date, desc, value): Records an expense in the checking account.
-        - export_statement(self, path=None): Exports the statement to a CSV file.
-        - query_statement(self, path=None): Queries the statement from a CSV file.
-    """
-    
     def __init__(self,nome,banco):
         super().__init__(nome, banco)
         self.extrato=pd.DataFrame(columns=['Data','Descrição','Valor'])
@@ -182,14 +129,6 @@ class ContaCorrente(Conta):
         self.extrato['Data'] = pd.to_datetime(self.extrato['Data'], format='%d/%m/%Y')
 
 class ContaPoupanca(Conta):
-    """
-    - Attributes:
-        - interest (float): Savings account interest rate.
-
-    - Methods:
-        - __init__(self, name, balance, interest): Initializes an instance of the Savings class.
-        - summary(self): Displays a summary of the savings account.
-    """
     def __init__(self, nome, saldo, rendimento):
         super().__init__(nome, saldo)
         self.rendimento = rendimento
@@ -198,3 +137,20 @@ class ContaPoupanca(Conta):
         super().resumo()
         print(f'Rendimento: {self.rendimento}%')
 
+nu_cred = Credito('Rafael','NuBank',5000,'18/12/2023','26/12/2023')
+# nu_cred.gasto('30/12/2023','Ceia',50,3)
+nu_cred.gasto('3/2/2024','Celular',1500,24)
+# nu_cred.consultar_fatura()
+# # nu_cred.gasto('02/02/2023','Carnaval',1000,5)
+print(nu_cred.fatura_atual)
+
+
+# nu_deb = ContaCorrente('Rafael','NuBank')
+# # nu_deb.recebimento('1/1/2024','Pix',500)
+# # nu_deb.gasto('2/1/2024','Padaria',30)
+# # nu_deb.gasto('3/1/2024','Shopping',1000)
+# # nu_deb.exportar_extrato()
+# nu_deb.consultar_extrato()
+# # nu_deb.recebimento('5/12/2023','RAM',150)
+# # nu_deb.exportar_extrato()
+# print(nu_deb.extrato)
