@@ -1,59 +1,60 @@
- ## **README.md**
+## **README.md**
 
-### **Descrição**
+### **Description**
 
-Este código em Python é uma aplicação simples para gerenciar contas financeiras, incluindo contas de crédito, conta corrente e conta poupança. Ele permite registrar despesas, recebimentos, exportar/importar extratos e consultar faturas.
+This Python code is a simple application for managing financial accounts, including credit accounts, checking accounts, and savings accounts. It allows you to record expenses, receipts, export/import statements, and query invoices.
 
-### **Requisitos** 
-- Bibliotecas necessárias: numpy, matplotlib, pandas, openpyxl
+### **Requirements**
+- Required libraries: numpy, matplotlib, pandas, openpyxl
 
-### **Estrutura do Código**
-O código está dividido em três classes principais:
+### **Code Structure**
+The code is divided into three main classes:
 
-- Conta: Classe base que armazena informações comuns a todas as contas (nome do titular, nome do banco, etc.).
+- Account: Base class that stores common information for all accounts (account holder's name, bank name, etc.).
 
-- Credito (Conta): Classe que representa uma conta de crédito. Permite registrar gastos, calcular faturas, exportar/importar faturas em formato CSV.
+- Credit (Account): Class representing a credit account. Allows recording expenses, calculating invoices, and exporting/importing invoices in CSV format.
 
-- ContaCorrente (Conta): Classe que representa uma conta corrente. Permite registrar recebimentos, gastos, exportar/importar extratos em formato CSV.
+- Checking (Account): Class representing a checking account. Allows recording receipts, expenses, and exporting/importing statements in CSV format.
 
-- ContaPoupanca (Conta): Classe que representa uma conta poupança. Permite exibir um resumo do rendimento.
+- Savings (Account): Class representing a savings account. Allows displaying a summary of the interest.
 
-### **Funcionalidades** 
-**Classe Conta**
-- Método resumo(): Exibe um resumo das informações da conta.
-**Classe Credito**
-- Método resumo(): Exibe um resumo da conta de crédito.
-- Método gasto(data, descr, valor, parcela=1): Registra uma despesa na conta de - crédito, permitindo parcelamento.
-- Método exportar_fatura(path=None): Exporta a fatura da conta de crédito para um arquivo CSV.
-- Método consultar_fatura(path=None): Consulta a fatura da conta de crédito a partir de um arquivo CSV.
-**Classe ContaCorrente**
-- Método recebimento(data, desc, valor): Registra um recebimento na conta corrente.
-- Método gasto(data, desc, valor): Registra um gasto na conta corrente.
-- Método exportar_extrato(path=None): Exporta o extrato da conta corrente para um arquivo CSV.
-- Método consultar_extrato(path=None): Consulta o extrato da conta corrente a partir de um arquivo CSV.
-**Classe ContaPoupanca**
-- Método resumo(): Exibe um resumo da conta poupança.
+### **Features**
+**Account Class**
+- Method summary(): Displays a summary of the account information.
+**Credit Class**
+- Method summary(): Displays a summary of the credit account.
+- Method expense(date, descr, value, installment=1): Records an expense in the credit account, allowing installment payments.
+- Method export_invoice(path=None): Exports the credit account invoice to a CSV file.
+- Method query_invoice(path=None): Queries the credit account invoice from a CSV file.
+**Checking Class**
+- Method receipt(date, desc, value): Records a receipt in the checking account.
+- Method expense(date, desc, value): Records an expense in the checking account.
+- Method export_statement(path=None): Exports the checking account statement to a CSV file.
+- Method query_statement(path=None): Queries the checking account statement from a CSV file.
+**Savings Class**
+- Method summary(): Displays a summary of the savings account.
 
-### **Exemplos de uso**
+### **Usage Examples**
 
+```python
+# Example of using a credit account (NuBank)
+nu_credit = Credit('Rafael', 'NuBank', 5000, '18/12/2023', '26/12/2023')
+nu_credit.expense('10/12/2023', 'Christmas Shopping', 300)
+nu_credit.export_invoice()
+nu_credit.query_invoice()
+
+# Example of using a checking account (NuBank)
+nu_checking = Checking('Rafael', 'NuBank')
+nu_checking.receipt('1/1/2024', 'Pix', 500)
+nu_checking.expense('2/1/2024', 'Bakery', 30)
+nu_checking.export_statement()
+nu_checking.query_statement()
+
+# Example of using a savings account
+savings_account = Savings('João', 1000, 0.5)
+savings_account.summary()
 ```
-# Exemplo de uso para uma conta de crédito (NuBank)
-nu_cred = Credito('Rafael', 'NuBank', 5000, '18/12/2023', '26/12/2023')
-nu_cred.gasto('10/12/2023', 'Compras de Natal', 300)
-nu_cred.exportar_fatura()
-nu_cred.consultar_fatura()
-
-# Exemplo de uso para uma conta corrente (NuBank)
-nu_deb = ContaCorrente('Rafael', 'NuBank')
-nu_deb.recebimento('1/1/2024', 'Pix', 500)
-nu_deb.gasto('2/1/2024', 'Padaria', 30)
-nu_deb.exportar_extrato()
-nu_deb.consultar_extrato()
-
-# Exemplo de uso para uma conta poupança
-conta_poupanca = ContaPoupanca('João', 1000, 0.5)
-conta_poupanca.resumo()
-```
-
-# Autores
-Gabriel Tomé Silveira, Rafael Godoi Cutait, Tainá Santos
+### **Authors**
+Gabriel Tomé Silveira
+Rafael Godoi Cutait 
+Tainá Santos
