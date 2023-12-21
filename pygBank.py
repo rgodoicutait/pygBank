@@ -47,23 +47,10 @@ class Credito(Conta):
         # Calcula o valor da parcela  
         valor_parcela = valor / parcela
         # Adiciona as parcelas à fatura
-        contador = 0
-        vira_ano = 0
-        data_compra = datetime.strptime(data,"%d/%m/%Y").date()
-        ano = data_compra.year
-
         for i in range(parcela):
-            if i==0: 
-                data_fatura = data_compra
-            elif i>0:
-                mes_aux = data_compra.month + i%12
-                if mes_aux%12==0:
-                    contador = i
-                    vira_ano += 1
-                elif mes_aux%12>0:
-                    mes_aux = i - contador + data_compra.month
-                    ano = ano + vira_ano
-                data_fatura = date(ano, mes_aux, self.data_fech.day)
+            data_compra = datetime.strptime(data,"%d/%m/%Y")
+            if i==0: data_fatura = data_compra
+            elif i>0: data_fatura = self.data_fech + timedelta(days=30 * (i+1)) # Encontra as datas das próximas parcelas da compra
             
             self.fatura_atual = self.fatura_atual._append({'Data':data_fatura,
                                                           'Descrição':f'{descr} {i+1}/{parcela}',
@@ -150,21 +137,3 @@ class ContaPoupanca(Conta):
         super().resumo()
         print(f'Rendimento: {self.rendimento}%')
 
-
-nu_cred = Credito('Rafael','NuBank',5000,'18/12/2023','26/12/2023')
-# nu_cred.gasto('30/12/2023','Ceia',50,3)
-nu_cred.gasto('3/2/2024','Celular',1500,24)
-# nu_cred.consultar_fatura()
-# # nu_cred.gasto('02/02/2023','Carnaval',1000,5)
-print(nu_cred.fatura_atual)
-
-
-# nu_deb = ContaCorrente('Rafael','NuBank')
-# # nu_deb.recebimento('1/1/2024','Pix',500)
-# # nu_deb.gasto('2/1/2024','Padaria',30)
-# # nu_deb.gasto('3/1/2024','Shopping',1000)
-# # nu_deb.exportar_extrato()
-# nu_deb.consultar_extrato()
-# # nu_deb.recebimento('5/12/2023','RAM',150)
-# # nu_deb.exportar_extrato()
-# print(nu_deb.extrato)
