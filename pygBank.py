@@ -5,8 +5,7 @@ from openpyxl import load_workbook, Workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.utils import get_column_letter
-from datetime import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta, date
 import os
 
 #TODO Exportar fatura do crédito para um csv. OK
@@ -47,14 +46,25 @@ class Credito(Conta):
     def gasto(self, data, descr, valor, parcela = 1):
         # Calcula o valor da parcela  
         valor_parcela = valor / parcela
-
         # Adiciona as parcelas à fatura
+        contador = 0
+        vira_ano = 0
+        data_compra = datetime.strptime(data,"%d/%m/%Y").date()
+        ano = data_compra.year
+
         for i in range(parcela):
-            data_compra = datetime.strptime(data,"%d/%m/%Y")
-            data_parcela = self.data_fech + timedelta(days=30 * (i+1)) # Encontra as datas das próximas parcelas da compra
-            # data_parcela = data_compra.month +
-            if i==0: data_fatura = data_compra
-            elif i>0: data_fatura = data_parcela
+            if i==0: 
+                data_fatura = data_compra
+            elif i>0:
+                mes_aux = data_compra.month + i%12
+                if mes_aux%12==0:
+                    contador = i
+                    vira_ano += 1
+                elif mes_aux%12>0:
+                    mes_aux = i - contador + data_compra.month
+                    ano = ano + vira_ano
+                data_fatura = date(ano, mes_aux, self.data_fech.day)
+            
             self.fatura_atual = self.fatura_atual._append({'Data':data_fatura,
                                                           'Descrição':f'{descr} {i+1}/{parcela}',
                                                           'Valor': valor_parcela,
@@ -62,7 +72,7 @@ class Credito(Conta):
                                                           ignore_index = True)
             
         # Recalcula o valor total da fatura
-        self.fatura_atual['Data'] = pd.to_datetime(self.fatura_atual['Data'], format='%d/%m/%Y')
+
         data_ref=[]
         dia_data_fech = self.data_fech.day
         for x in self.fatura_atual['Data']:
@@ -142,27 +152,19 @@ class ContaPoupanca(Conta):
 
 
 nu_cred = Credito('Rafael','NuBank',5000,'18/12/2023','26/12/2023')
-# # nu_cred.gasto('30/12/2023','Ceia',50)
-# # nu_cred.gasto('3/2/2024','Celular',1500,8)
-nu_cred.consultar_fatura()
-# nu_cred.gasto('02/02/2023','Carnaval',1000,5)
+# nu_cred.gasto('30/12/2023','Ceia',50,3)
+nu_cred.gasto('3/2/2024','Celular',1500,8)
+# nu_cred.consultar_fatura()
+# # nu_cred.gasto('02/02/2023','Carnaval',1000,5)
 print(nu_cred.fatura_atual)
 
-nu_deb = ContaCorrente('Rafael','NuBank')
-# nu_deb.recebimento('1/1/2024','Pix',500)
-# nu_deb.gasto('2/1/2024','Padaria',30)
-# nu_deb.gasto('3/1/2024','Shopping',1000)
-# nu_deb.exportar_extrato()
-nu_deb.consultar_extrato()
-# nu_deb.recebimento('5/12/2023','RAM',150)
-# nu_deb.exportar_extrato()
-print(nu_deb.extrato)
 
-
-nu_cred_taina = Credito('Tainá','Itaú',800,'03/12/2023','12/12/2023')
-nu_cred_taina.gasto('10/12/2023','Presente para o Rafael',100,2)
-nu_cred_taina.gasto('10/11/2023','Presente para o Rafael 2',60,2)
-nu_cred_taina.exportar_fatura()
-nu_cred_taina.consultar_fatura()
-
-
+# nu_deb = ContaCorrente('Rafael','NuBank')
+# # nu_deb.recebimento('1/1/2024','Pix',500)
+# # nu_deb.gasto('2/1/2024','Padaria',30)
+# # nu_deb.gasto('3/1/2024','Shopping',1000)
+# # nu_deb.exportar_extrato()
+# nu_deb.consultar_extrato()
+# # nu_deb.recebimento('5/12/2023','RAM',150)
+# # nu_deb.exportar_extrato()
+# print(nu_deb.extrato)
