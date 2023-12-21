@@ -153,7 +153,7 @@ class ContaPoupanca(Conta):
 
 nu_cred = Credito('Rafael','NuBank',5000,'18/12/2023','26/12/2023')
 # nu_cred.gasto('30/12/2023','Ceia',50,3)
-nu_cred.gasto('3/2/2024','Celular',1500,8)
+nu_cred.gasto('3/2/2024','Celular',1500,24)
 # nu_cred.consultar_fatura()
 # # nu_cred.gasto('02/02/2023','Carnaval',1000,5)
 print(nu_cred.fatura_atual)
