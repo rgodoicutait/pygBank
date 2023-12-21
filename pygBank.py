@@ -8,12 +8,12 @@ from openpyxl.utils import get_column_letter
 from datetime import datetime, timedelta, date
 import os
 
-'''
-Sistema Bancário - Documentação
+"""
+Banking System - Documentation
 
-Este programa implementa um sistema bancário simples com contas de crédito, conta corrente e conta poupança.
+This program implements a simple banking system with credit, checking, and savings accounts.
 
-Módulos e Bibliotecas Utilizados:
+Modules and Libraries Used:
 - numpy
 - matplotlib.pyplot
 - pandas
@@ -21,23 +21,23 @@ Módulos e Bibliotecas Utilizados:
 - datetime
 - os
 
-Exemplo de Uso:
-- Criar instâncias das classes Credito, ContaCorrente e ContaPoupanca.
-- Realizar operações como gastos, recebimentos, exportação e consulta de faturas/extratos.
+Example Usage:
+- Create instances of the Credit, Checking, and Savings account classes.
+- Perform operations such as expenses, receipts, export, and query of invoices/extractions.
+"""
 
-'''
 
 class Conta:
-    '''
-    - Atributos:
-        - nome (str): Nome do usuário.
-        - banco (str): Nome do banco.
-        - caminho_pasta (str): Caminho da pasta do programa.
+    """
+    - Attributes:
+        - name (str): User's name.
+        - bank (str): Bank name.
+        - folder_path (str): Program folder path.
 
-    - Métodos:
-        - __init__(self, nome, banco): Inicializa uma instância da classe Conta.
-        - resumo(self): Exibe um resumo da conta.
-    '''
+    - Methods:
+        - __init__(self, name, bank): Initializes an instance of the Account class.
+        - summary(self): Displays an account summary.
+    """
     def __init__(self, nome, banco):
         self.nome = nome
         self.banco = banco
@@ -52,22 +52,21 @@ class Conta:
         print(f'Saldo: R${self.saldo:.2f}')
 
 class Credito(Conta):
-    '''   
-    - Atributos:
-        - limite (float): Limite de crédito.
-        - data_fech (datetime): Data de fechamento da fatura.
-        - data_venc (datetime): Data de vencimento da fatura.
-        - fatura_atual (DataFrame): DataFrame para armazenar as transações da fatura.
-        - arq_cred (str): Caminho do arquivo CSV para exportar/importar a fatura.
+    """
+    - Attributes:
+        - limit (float): Credit limit.
+        - closing_date (datetime): Invoice closing date.
+        - due_date (datetime): Invoice due date.
+        - current_invoice (DataFrame): DataFrame to store invoice transactions.
+        - cred_file (str): Path of the CSV file to export/import the invoice.
 
-    - Métodos:
-        - __init__(self, nome, banco, limite, data_fech, data_venc): Inicializa uma instância da classe Credito.
-        - resumo(self): Exibe um resumo da conta de crédito.
-        - gasto(self, data, descr, valor, parcela=1): Registra uma despesa na conta de crédito.
-        - exportar_fatura(self, path=None): Exporta a fatura para um arquivo CSV.
-        - consultar_fatura(self, path=None): Consulta a fatura a partir de um arquivo CSV.
-
-    '''
+    - Methods:
+        - __init__(self, name, bank, limit, closing_date, due_date): Initializes an instance of the Credit class.
+        - summary(self): Displays a summary of the credit account.
+        - expense(self, date, descr, value, installment=1): Records an expense in the credit account.
+        - export_invoice(self, path=None): Exports the invoice to a CSV file.
+        - query_invoice(self, path=None): Queries the invoice from a CSV file.
+    """
     def __init__(self, nome, banco, limite, data_fech, data_venc):
         '''Utilize as datas de fechamento e de vencimento da fatura no seguinte formato:
            dd/mm/aaaa'''
@@ -131,20 +130,18 @@ class Credito(Conta):
         self.fatura_atual['Data'] = pd.to_datetime(self.fatura_atual['Data'], format='%d/%m/%Y')
         
 class ContaCorrente(Conta):
-    '''    
-    - Atributos:
-        - extrato (DataFrame): DataFrame para armazenar transações da conta corrente.
-        - arq_cc (str): Caminho do arquivo CSV para exportar/importar o extrato.
+    """
+    - Attributes:
+        - statement (DataFrame): DataFrame to store checking account transactions.
+        - checking_file (str): Path of the CSV file to export/import the statement.
 
-    - Métodos:
-        - __init__(self, nome, banco): Inicializa uma instância da classe ContaCorrente.
-        - recebimento(self, data, desc, valor): Registra um recebimento na conta corrente.
-        - gasto(self, data, desc, valor): Registra um gasto na conta corrente.
-        - exportar_extrato(self, path=None): Exporta o extrato para um arquivo CSV.
-        - consultar_extrato(self, path=None): Consulta o extrato a partir de um arquivo CSV.
-
-
-    '''
+    - Methods:
+        - __init__(self, name, bank): Initializes an instance of the Checking class.
+        - receipt(self, date, desc, value): Records a receipt in the checking account.
+        - expense(self, date, desc, value): Records an expense in the checking account.
+        - export_statement(self, path=None): Exports the statement to a CSV file.
+        - query_statement(self, path=None): Queries the statement from a CSV file.
+    """
     
     def __init__(self,nome,banco):
         super().__init__(nome, banco)
@@ -185,14 +182,14 @@ class ContaCorrente(Conta):
         self.extrato['Data'] = pd.to_datetime(self.extrato['Data'], format='%d/%m/%Y')
 
 class ContaPoupanca(Conta):
-'''    
-    - Atributos:
-        - rendimento (float): Percentual de rendimento da conta poupança.
+    """
+    - Attributes:
+        - interest (float): Savings account interest rate.
 
-    - Métodos:
-        - __init__(self, nome, saldo, rendimento): Inicializa uma instância da classe ContaPoupanca.
-        - resumo(self): Exibe um resumo da conta poupança.
-'''
+    - Methods:
+        - __init__(self, name, balance, interest): Initializes an instance of the Savings class.
+        - summary(self): Displays a summary of the savings account.
+    """
     def __init__(self, nome, saldo, rendimento):
         super().__init__(nome, saldo)
         self.rendimento = rendimento
