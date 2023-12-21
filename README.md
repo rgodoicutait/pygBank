@@ -1,54 +1,60 @@
  ## **README.md**
 
-### **Introduction**
+### **Descrição**
 
-This repository contains a Python script that implements a simple banking system with different types of accounts, including checking accounts, savings accounts, and credit accounts. The system allows users to perform various banking operations such as deposits, withdrawals, and bill payments.
+Este código em Python é uma aplicação simples para gerenciar contas financeiras, incluindo contas de crédito, conta corrente e conta poupança. Ele permite registrar despesas, recebimentos, exportar/importar extratos e consultar faturas.
 
-### **Getting Started**
+### **Requisitos** 
+- Bibliotecas necessárias: numpy, matplotlib, pandas, openpyxl
 
-To run the script, you will need to have Python 3 installed on your system. You can download Python from the official Python website.
+### **Estrutura do Código**
+O código está dividido em três classes principais:
 
-Once you have installed Python, you can clone this repository to your local machine using the following command:
+- Conta: Classe base que armazena informações comuns a todas as contas (nome do titular, nome do banco, etc.).
+
+- Credito (Conta): Classe que representa uma conta de crédito. Permite registrar gastos, calcular faturas, exportar/importar faturas em formato CSV.
+
+- ContaCorrente (Conta): Classe que representa uma conta corrente. Permite registrar recebimentos, gastos, exportar/importar extratos em formato CSV.
+
+- ContaPoupanca (Conta): Classe que representa uma conta poupança. Permite exibir um resumo do rendimento.
+
+### **Funcionalidades** 
+**Classe Conta**
+- Método resumo(): Exibe um resumo das informações da conta.
+**Classe Credito**
+- Método resumo(): Exibe um resumo da conta de crédito.
+- Método gasto(data, descr, valor, parcela=1): Registra uma despesa na conta de - crédito, permitindo parcelamento.
+- Método exportar_fatura(path=None): Exporta a fatura da conta de crédito para um arquivo CSV.
+- Método consultar_fatura(path=None): Consulta a fatura da conta de crédito a partir de um arquivo CSV.
+**Classe ContaCorrente**
+- Método recebimento(data, desc, valor): Registra um recebimento na conta corrente.
+- Método gasto(data, desc, valor): Registra um gasto na conta corrente.
+- Método exportar_extrato(path=None): Exporta o extrato da conta corrente para um arquivo CSV.
+- Método consultar_extrato(path=None): Consulta o extrato da conta corrente a partir de um arquivo CSV.
+**Classe ContaPoupanca**
+- Método resumo(): Exibe um resumo da conta poupança.
+
+### **Exemplos de uso**
 
 ```
-git clone https://github.com/your-username/banking-system.git
+# Exemplo de uso para uma conta de crédito (NuBank)
+nu_cred = Credito('Rafael', 'NuBank', 5000, '18/12/2023', '26/12/2023')
+nu_cred.gasto('10/12/2023', 'Compras de Natal', 300)
+nu_cred.exportar_fatura()
+nu_cred.consultar_fatura()
+
+# Exemplo de uso para uma conta corrente (NuBank)
+nu_deb = ContaCorrente('Rafael', 'NuBank')
+nu_deb.recebimento('1/1/2024', 'Pix', 500)
+nu_deb.gasto('2/1/2024', 'Padaria', 30)
+nu_deb.exportar_extrato()
+nu_deb.consultar_extrato()
+
+# Exemplo de uso para uma conta poupança
+conta_poupanca = ContaPoupanca('João', 1000, 0.5)
+conta_poupanca.resumo()
 ```
 
-Navigate to the directory where you cloned the repository and install the required Python packages using the following command:
-
-```
-pip install -r requirements.txt
-```
-
-### **Running the Script**
-
-To run the script, simply open a terminal window and navigate to the directory where you cloned the repository. Then, run the following command:
-
-```
-python main.py
-```
-
-The script will start running and will display a menu of options. You can select an option by entering the corresponding number and pressing the Enter key.
-
-### **Banking System Features**
-
-The banking system script includes the following features:
-
-* **Checking Account:** Allows users to deposit and withdraw money, as well as view their account balance.
-* **Savings Account:** Allows users to deposit money and earn interest on their savings.
-* **Credit Account:** Allows users to make purchases and pay bills using a credit card.
-* **Bill Payment:** Allows users to pay bills for various services such as electricity, water, and internet.
-
-### **Code Explanation**
-
-The banking system script is written in Python and uses the following modules:
-
-* **pandas:** A library for data analysis and manipulation.
-* **openpyxl:** A library for reading and writing Excel files.
-* **datetime:** A library for working with dates and times.
-
-The script is organized into several classes, each of which represents a different type of bank account. The `Conta` class is the base class for all bank accounts and defines the common attributes and methods for all accounts. The `ContaCorrente` class represents a checking account, the `ContaPoupanca` class represents a savings account, and the `Credito` class represents a credit account.
-
-The script also includes a `main` function that creates instances of each type of bank account and allows users to
-
-Generated by [BlackboxAI](https://www.blackbox.ai)
+# Autores
+| [<img loading="lazy" src="https://avatars.githubusercontent.com/u/37356058?v=4" width=115><br><sub>Camila Fernanda Alves</sub>](https://github.com/camilafernanda) |  [<img loading="lazy" src="https://avatars.githubusercontent.com/u/30351153?v=4" width=115><br><sub>Guilherme Lima</sub>](https://github.com/guilhermeonrails) |  [<img loading="lazy" src="https://avatars.githubusercontent.com/u/8989346?v=4" width=115><br><sub>Alex Felipe</sub>](https://github.com/alexfelipe) |
+| :---: | :---: | :---: |
