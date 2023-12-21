@@ -8,16 +8,6 @@ from openpyxl.utils import get_column_letter
 from datetime import datetime
 from datetime import timedelta
 
-# classe mãe: banco?
-## classe filha: crédito, débito, poupança?
-### usar o pandas para salvar tudo em algum lugar?
-#### Como formatar uma string como data?
-##### Como chamar a subclasse para utilizar tanto as funções da classe mãe quanto a da filha?
-#TODO Algum método de armazenar/acessar o histórico da pessoa (acessar o arquivo em que as movimentações foram salvas, ex: Excel, csv, etc...)
-#TODO Alguma interface de texto?
-
-
-
 class Conta:
     def __init__(self, nome, banco, saldo, db_path, data_inicial=datetime.today()):
         self.nome = nome
@@ -35,6 +25,7 @@ class Conta:
         print(f'Banco: {self.banco}')
         print(f'Saldo: R${self.saldo:.2f}')
 
+
 class Credito(Conta):
     def __init__(self, nome, banco, saldo, limite, data_fech, data_venc,db_path):
         '''Utilize as datas de fechamento e de vencimento da fatura no seguinte formato:
@@ -44,7 +35,7 @@ class Credito(Conta):
         self.data_fech = datetime.strptime(data_fech,"%d/%m/%Y")
         self.data_venc = datetime.strptime(data_venc,"%d/%m/%Y")
         self.fatura_atual = pd.DataFrame(columns=['Data','Descrição','Valor'])
-        self.arquivo_excel = db_path
+        self.arquivo_csv = db_path
 
 
     def resumo(self):
@@ -54,11 +45,6 @@ class Credito(Conta):
         print(f'Data de Vencimento da Fatura: {self.data_venc}')
 
     def gasto(self, data, descr, valor, parcela = 1):
-        # Verifica se a fatura foi fechada
-        if self.data_fech is not None and datetime.now() > self.data_fech:
-            print("Fatura Fechada. Fechando automaticamente...")
-            self.fechar_fatura()
-
         # Calcula o valor da parcela  
         valor_parcela = valor / parcela
 
@@ -90,8 +76,6 @@ class Credito(Conta):
         self.fatura_atual['Valor'] = pd.to_numeric(self.fatura_atual['Valor'], errors='coerce')
         self.fatura_atual['Valor Total Fatura']=self.fatura_atual.groupby([self.fatura_atual['Data_Ref'].dt.year, self.fatura_atual['Data_Ref'].dt.month])['Valor'].cumsum()
 
-            
-    
     def fechar_fatura(self):
         # Exibe a fatura atual
 
