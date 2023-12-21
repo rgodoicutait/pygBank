@@ -9,18 +9,14 @@ from datetime import datetime
 from datetime import timedelta
 import os
 
-
+#TODO Exportar fatura do crédito para um csv. OK
+#TODO Exportar o extrato da conta corrente para um csv?
+#TODO Login
 
 class Conta:
-    def __init__(self, nome, banco, saldo, data_inicial=datetime.today()):
+    def __init__(self, nome, banco):
         self.nome = nome
         self.banco = banco
-        self.saldo = saldo
-        if data_inicial is str:
-            self.data_inicial = datetime.strptime(data_inicial,"%d/%m/$Y")
-        else:
-            self.data_inicial = data_inicial
-        self.extrato = {"Data":[data_inicial],"Descrição":["Saldo Inicial"],"Valor":[saldo],"Saldo":[saldo]}
     # Adquirindo o caminho da pasta em que o programa está armazenado
         diretorio_atual = os.getcwd()
         nome_arquivo = os.path.basename(diretorio_atual)
@@ -32,10 +28,10 @@ class Conta:
         print(f'Saldo: R${self.saldo:.2f}')
 
 class Credito(Conta):
-    def __init__(self, nome, banco, saldo, limite, data_fech, data_venc):
+    def __init__(self, nome, banco, limite, data_fech, data_venc):
         '''Utilize as datas de fechamento e de vencimento da fatura no seguinte formato:
            dd/mm/aaaa'''
-        super().__init__(nome, banco, saldo)
+        super().__init__(nome, banco)
         self.limite = limite
         self.data_fech = datetime.strptime(data_fech,"%d/%m/%Y")
         self.data_venc = datetime.strptime(data_venc,"%d/%m/%Y")
@@ -56,6 +52,7 @@ class Credito(Conta):
         for i in range(parcela):
             data_compra = datetime.strptime(data,"%d/%m/%Y")
             data_parcela = self.data_fech + timedelta(days=30 * (i+1)) # Encontra as datas das próximas parcelas da compra
+            # data_parcela = data_compra.month +
             if i==0: data_fatura = data_compra
             elif i>0: data_fatura = data_parcela
             self.fatura_atual = self.fatura_atual._append({'Data':data_fatura,
@@ -67,24 +64,24 @@ class Credito(Conta):
         # Recalcula o valor total da fatura
         self.fatura_atual['Data'] = pd.to_datetime(self.fatura_atual['Data'], format='%d/%m/%Y')
         data_ref=[]
+        dia_data_fech = self.data_fech.day
         for x in self.fatura_atual['Data']:
-            if x.day<18 and x.month==1:
+            if x.day<dia_data_fech and x.month==1:
                 data_ref.append(x+pd.offsets.MonthBegin(0)+pd.DateOffset(days=self.data_fech.day - 1))
-            elif x.day<18:
+            elif x.day<dia_data_fech:
                 data_ref.append(x+pd.offsets.MonthBegin(-1)+pd.DateOffset(days=self.data_fech.day - 1))
-            elif x.day>=18:
+            elif x.day>=dia_data_fech:
                 data_ref.append(x+pd.offsets.MonthBegin(0)+pd.DateOffset(days=self.data_fech.day - 1))
         self.fatura_atual['Data_Ref']=data_ref
-    
-        self.fatura_atual = self.fatura_atual.sort_values(by="Data")
+        self.fatura_atual = self.fatura_atual.sort_values(by="Data",ignore_index=True)
         self.fatura_atual['Valor'] = pd.to_numeric(self.fatura_atual['Valor'], errors='coerce')
         self.fatura_atual['Valor Total Fatura']=self.fatura_atual.groupby([self.fatura_atual['Data_Ref'].dt.year, self.fatura_atual['Data_Ref'].dt.month])['Valor'].cumsum()
     
     def exportar_fatura(self,path=None):
         if path != None:
             self.arq_cred=path
-        self.fatura_atual['Data'] =self.fatura_atual['Data'].apply(lambda x: x.strftime('%d/%m/%y'))
-        self.fatura_atual['Data_Ref'] =self.fatura_atual['Data_Ref'].apply(lambda x: x.strftime('%d/%m/%y'))
+        self.fatura_atual['Data'] =self.fatura_atual['Data'].apply(lambda x: x.strftime('%d/%m/%Y'))
+        self.fatura_atual['Data_Ref'] =self.fatura_atual['Data_Ref'].apply(lambda x: x.strftime('%d/%m/%Y'))
         self.fatura_atual.to_csv(self.arq_cred,';',index=False,encoding='utf-8')
 
         print('fatura exportada para: ' + self.arq_cred)
@@ -92,38 +89,47 @@ class Credito(Conta):
     def consultar_fatura(self,path=None):
         if path != None:
             self.arq_cred=path
-        self.fatura_atual=pd.read_csv(self.arq_cred,sep=';',header=0)
+        self.fatura_atual=pd.read_csv(self.arq_cred,sep=';',header=0,index_col=False)
+        self.fatura_atual['Data'] = pd.to_datetime(self.fatura_atual['Data'], format='%d/%m/%Y')
         
-
 class ContaCorrente(Conta):
-    def __init__(self, nome, banco, saldo, db_path, taxa=0):
-        super().__init__(nome, banco, saldo, db_path)
-        self.taxa = taxa
-
-    def debito(self, descr, valor, data=datetime.today()):
-        self.extrato["Data"].append(data)
-        self.extrato["Descrição"].append(descr)
-        self.extrato["Valor"].append(-valor)
-        if self.saldo - valor <0:
-            print("transação inválida") #TODO transformar em mensagem de erro e permitir redigitação
-        else:
-            self.saldo=self.saldo - valor
-            self.extrato["Saldo"].append(self.saldo)
+    def __init__(self,nome,banco):
+        super().__init__(nome, banco)
+        self.extrato=pd.DataFrame(columns=['Data','Descrição','Valor'])
+        self.arq_cc = self.caminho_pasta + self.nome + '_' + banco + '_' + 'CC.csv'
     
-    def recebimento(self, descr, valor, data=datetime.today()):
-        self.extrato["Data"].append(data)
-        self.extrato["Descrição"].append(descr)
-        self.extrato["Valor"].append(valor)
-        self.saldo = self.saldo + valor
-        self.extrato["Saldo"].append(self.saldo)
+    def recebimento(self,data,desc,valor):
+        self.extrato = self.extrato._append({'Data':datetime.strptime(data,'%d/%m/%Y'),
+                                             'Descrição':desc,
+                                             'Valor':valor,
+                                             'Saldo':0}, ignore_index=True)
+        self.extrato['Data'] = pd.to_datetime(self.extrato['Data'], format='%d/%m/%Y')
+        self.extrato = self.extrato.sort_values(by="Data",ignore_index=True)
+        self.extrato['Saldo'] = self.extrato['Valor'].cumsum()
 
-    def Extrato(self): #TODO delimitar datas para printar o extrato
-        print(pd.DataFrame(self.extrato))
+    def gasto(self,data,desc,valor):
+        if self.extrato['Saldo'].any() - valor <0:
+            print('Não há saldo suficiente')
+        else:
+            self.extrato = self.extrato._append({'Data':datetime.strptime(data,'%d/%m/%Y'),
+                                                'Descrição':desc,
+                                                'Valor':-valor,
+                                                'Saldo':0}, ignore_index=True)
+            self.extrato['Data'] = pd.to_datetime(self.extrato['Data'], format='%d/%m/%Y')
+            self.extrato = self.extrato.sort_values(by="Data",ignore_index=True)
+            self.extrato['Saldo'] = self.extrato['Valor'].cumsum()
 
-
-    def resumo(self):
-        super().resumo()
-        print(f'Taxa: {self.taxa}%')
+    def exportar_extrato(self,path=None):
+        if path != None:
+            self.arq_cc=path
+        self.extrato['Data'] =self.extrato['Data'].apply(lambda x: x.strftime('%d/%m/%Y'))
+        self.extrato.to_csv(self.arq_cc,';',index=False,encoding='utf-8')
+    
+    def consultar_extrato(self,path=None):
+        if path != None:
+            self.arq_cc=path
+        self.extrato=pd.read_csv(self.arq_cc,sep=';',header=0,index_col=False)
+        self.extrato['Data'] = pd.to_datetime(self.extrato['Data'], format='%d/%m/%Y')
 
 class ContaPoupanca(Conta):
     def __init__(self, nome, saldo, rendimento):
@@ -134,12 +140,29 @@ class ContaPoupanca(Conta):
         super().resumo()
         print(f'Rendimento: {self.rendimento}%')
 
-nu_cred = Credito('Rafael','NuBank',100,3000,'18/12/2023','26/12/2023')
-# nu_cred.gasto('20/12/2023','Padaria',10)
-# nu_cred.gasto('21/12/2023','Manutenção carro',1000,4)
-# nu_cred.gasto('26/12/2023','Celular',2400,12)
-# nu_cred.exportar_fatura(r'C:\Users\rafae\OneDrive\Faculdade\10º Período\Projeto Computacional\credito.csv')
-# nu_cred.exportar_fatura()
+
+nu_cred = Credito('Rafael','NuBank',5000,'18/12/2023','26/12/2023')
+# # nu_cred.gasto('30/12/2023','Ceia',50)
+# # nu_cred.gasto('3/2/2024','Celular',1500,8)
 nu_cred.consultar_fatura()
-nu_cred.gasto('30/12/2023','Mercado',198.80)
+# nu_cred.gasto('02/02/2023','Carnaval',1000,5)
 print(nu_cred.fatura_atual)
+
+nu_deb = ContaCorrente('Rafael','NuBank')
+# nu_deb.recebimento('1/1/2024','Pix',500)
+# nu_deb.gasto('2/1/2024','Padaria',30)
+# nu_deb.gasto('3/1/2024','Shopping',1000)
+# nu_deb.exportar_extrato()
+nu_deb.consultar_extrato()
+# nu_deb.recebimento('5/12/2023','RAM',150)
+# nu_deb.exportar_extrato()
+print(nu_deb.extrato)
+
+
+nu_cred_taina = Credito('Tainá','Itaú',800,'03/12/2023','12/12/2023')
+nu_cred_taina.gasto('10/12/2023','Presente para o Rafael',100,2)
+nu_cred_taina.gasto('10/11/2023','Presente para o Rafael 2',60,2)
+nu_cred_taina.exportar_fatura()
+nu_cred_taina.consultar_fatura()
+
+
