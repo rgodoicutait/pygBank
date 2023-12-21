@@ -1,24 +1,20 @@
 import customtkinter as ctk
 import pandas as pd
 
-# Função para verificar as credenciais do usuário
-def verificar_credenciais(username, password):
-    # Carregar os dados do arquivo Excel (substitua 'caminho/do/arquivo.xlsx' pelo seu caminho)
-    dados_usuarios = pd.read_excel('usuarios.xlsx')
-    
-    # Verificar se o usuário e a senha estão na lista carregada do Excel
-    if (dados_usuarios['Email'] == username).any() and (dados_usuarios['senha'] == password).any():
-        return True
-    else:
-        return False
-
-
 # Atualização da função clique para usar a verificação de credenciais
-def clique():
-    if verificar_credenciais(email.get(), senha.get()):
-        fazer_login()
-    else:
-        print("Credenciais inválidas")
+def invalido():
+    erro_janela = ctk.CTk()
+    erro_janela.geometry("500x300")
+
+    def verificar_credencial(login):
+        print (f"Credencial inválida: {login}")
+    label_erro = ctk.CTkLabel(erro_janela, text= "Credencial inválida")
+    label_erro.pack(padx=10, pady=10)
+
+    opçoes_erro = ["Login", "Criar Login"]
+    for login in opçoes_erro:
+        botao_login = ctk.CTkButton(erro_janela, text=login, command=lambda o=opçoes_erro: verificar_credencial(o))
+        botao_login.pack(padx=10, pady=5)
 
 ctk.set_appearance_mode("dark")
 ctk.set_default_color_theme("dark-blue")
@@ -43,11 +39,21 @@ def fazer_login():
 
     nova_janela.mainloop()
 
+# Função para verificar as credenciais do usuário
+def verificar_credenciais(username, password):
+    # Carregar os dados do arquivo Excel (substitua 'caminho/do/arquivo.xlsx' pelo seu caminho)
+    dados_usuarios = pd.read_excel('usuarios.xlsx',header=0)
+    
+    # Verificar se o usuário e a senha estão na lista carregada do Excel
+    if (dados_usuarios['Email'] == username).any() and (dados_usuarios['senha'] == password).any():
+        fazer_login()
+    else:
+        invalido()
+
 def clique():
     # Verificar o login aqui, por exemplo:
-    # if verificar_credenciais(email.get(), senha.get()):
-    #     fazer_login()
-    fazer_login()
+    if verificar_credenciais(email.get(), senha.get()):
+        fazer_login()
 
 janela = ctk.CTk()
 janela.geometry("500x300")
