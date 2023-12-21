@@ -7,36 +7,40 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.utils import get_column_letter
 from datetime import datetime
 from datetime import timedelta
+import os
+
+
 
 class Conta:
-    def __init__(self, nome, banco, saldo, db_path, data_inicial=datetime.today()):
+    def __init__(self, nome, banco, saldo, data_inicial=datetime.today()):
         self.nome = nome
         self.banco = banco
         self.saldo = saldo
-        self.db_path = db_path
         if data_inicial is str:
             self.data_inicial = datetime.strptime(data_inicial,"%d/%m/$Y")
         else:
             self.data_inicial = data_inicial
         self.extrato = {"Data":[data_inicial],"Descrição":["Saldo Inicial"],"Valor":[saldo],"Saldo":[saldo]}
+    # Adquirindo o caminho da pasta em que o programa está armazenado
+        diretorio_atual = os.getcwd()
+        nome_arquivo = os.path.basename(diretorio_atual)
+        self.caminho_pasta = diretorio_atual.replace(nome_arquivo,'')
 
     def resumo(self):
         print(f'Nome: {self.nome}')
         print(f'Banco: {self.banco}')
         print(f'Saldo: R${self.saldo:.2f}')
 
-
 class Credito(Conta):
-    def __init__(self, nome, banco, saldo, limite, data_fech, data_venc,db_path):
+    def __init__(self, nome, banco, saldo, limite, data_fech, data_venc):
         '''Utilize as datas de fechamento e de vencimento da fatura no seguinte formato:
            dd/mm/aaaa'''
-        super().__init__(nome, banco, saldo,db_path)
+        super().__init__(nome, banco, saldo)
         self.limite = limite
         self.data_fech = datetime.strptime(data_fech,"%d/%m/%Y")
         self.data_venc = datetime.strptime(data_venc,"%d/%m/%Y")
         self.fatura_atual = pd.DataFrame(columns=['Data','Descrição','Valor'])
-        self.arquivo_csv = db_path
-
+        self.arq_cred = self.caminho_pasta + self.nome + '_' + banco + '_' + 'Credito.csv'
 
     def resumo(self):
         super().resumo()
@@ -75,18 +79,21 @@ class Credito(Conta):
         self.fatura_atual = self.fatura_atual.sort_values(by="Data")
         self.fatura_atual['Valor'] = pd.to_numeric(self.fatura_atual['Valor'], errors='coerce')
         self.fatura_atual['Valor Total Fatura']=self.fatura_atual.groupby([self.fatura_atual['Data_Ref'].dt.year, self.fatura_atual['Data_Ref'].dt.month])['Valor'].cumsum()
+    
+    def exportar_fatura(self,path=None):
+        if path != None:
+            self.arq_cred=path
+        self.fatura_atual['Data'] =self.fatura_atual['Data'].apply(lambda x: x.strftime('%d/%m/%y'))
+        self.fatura_atual['Data_Ref'] =self.fatura_atual['Data_Ref'].apply(lambda x: x.strftime('%d/%m/%y'))
+        self.fatura_atual.to_csv(self.arq_cred,';',index=False,encoding='utf-8')
 
-    def fechar_fatura(self):
-        # Exibe a fatura atual
+        print('fatura exportada para: ' + self.arq_cred)
 
-        # Salva a fatura em um arquivo Excel
-        self.fatura_atual.to_csv(self.db_path,';',index=False)
+    def consultar_fatura(self,path=None):
+        if path != None:
+            self.arq_cred=path
+        self.fatura_atual=pd.read_csv(self.arq_cred,sep=';',header=0)
         
-    def exibir_fatura(self): 
-        caminho = self.db_path
-        db_fatura = pd.read_csv(caminho,header = 0)
-
-    #TODO Cálculo de juros em caso de não pagamento da fatura na data devida************ (cada banco faz de um jeito, fica complicado)
 
 class ContaCorrente(Conta):
     def __init__(self, nome, banco, saldo, db_path, taxa=0):
@@ -118,7 +125,6 @@ class ContaCorrente(Conta):
         super().resumo()
         print(f'Taxa: {self.taxa}%')
 
-
 class ContaPoupanca(Conta):
     def __init__(self, nome, saldo, rendimento):
         super().__init__(nome, saldo)
@@ -128,19 +134,12 @@ class ContaPoupanca(Conta):
         super().resumo()
         print(f'Rendimento: {self.rendimento}%')
 
-##########
-# path = r"C:\Users\rafae\OneDrive\Faculdade\10º Período\Projeto Computacional\bancodedados.xlsx"
-path = r"C:\Users\rafae\OneDrive\Faculdade\10º Período\Projeto Computacional\bancodedados.csv"
-# nu_deb = ContaCorrente("Tainá","NuBank",1100,0)
-# nu_deb.debito("Uber Demar",15)
-# nu_deb.recebimento("Pix",100)
-# nu_deb.Extrato()
-
-nu_cred = Credito("Rafael","NuBank",100,3000,"18/12/2023","26/12/2023",db_path=path)
-nu_cred.gasto("27/12/2023","Uber",12.50)
-nu_cred.gasto("28/12/2023","SSD",250,3)
-nu_cred.gasto("30/12/2023","Passagem Lorena - SP",90,4)
-nu_cred.gasto("31/12/2023","Chá",50)
-nu_cred.gasto("20/02/2023","Guitar Hero 3",300)
+nu_cred = Credito('Rafael','NuBank',100,3000,'18/12/2023','26/12/2023')
+# nu_cred.gasto('20/12/2023','Padaria',10)
+# nu_cred.gasto('21/12/2023','Manutenção carro',1000,4)
+# nu_cred.gasto('26/12/2023','Celular',2400,12)
+# nu_cred.exportar_fatura(r'C:\Users\rafae\OneDrive\Faculdade\10º Período\Projeto Computacional\credito.csv')
+# nu_cred.exportar_fatura()
+nu_cred.consultar_fatura()
+nu_cred.gasto('30/12/2023','Mercado',198.80)
 print(nu_cred.fatura_atual)
-nu_cred.fechar_fatura()
